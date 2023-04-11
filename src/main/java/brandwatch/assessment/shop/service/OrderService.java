@@ -2,6 +2,8 @@ package brandwatch.assessment.shop.service;
 
 import brandwatch.assessment.shop.client.StoreClient;
 import brandwatch.assessment.shop.dto.CreateOrderRequest;
+import brandwatch.assessment.shop.dto.CreateOrderResult;
+import brandwatch.assessment.shop.dto.StockCheckResult;
 import brandwatch.assessment.shop.model.Order;
 import brandwatch.assessment.shop.repository.OrderRepository;
 import org.springframework.stereotype.Service;
@@ -20,20 +22,18 @@ public class OrderService {
         this.storeClient = storeClient;
     }
 
-    public Order createOrder(CreateOrderRequest request) {
-        boolean inStock = storeClient.checkStockAvailability(request.getLineItems());
-        Order saved;
-        if (inStock) {
-            saved = createOrderSuccess(request);
+    public CreateOrderResult createOrder(CreateOrderRequest request) {
+        StockCheckResult result = storeClient.processStockAvailability(request);
+        if (result.getSuccess()) {
+            return new CreateOrderResult(createOrderSuccess(request), "Order completed.");
         } else {
-            saved = createPendingOrder(request);
+            return new CreateOrderResult(createPendingOrder(request), "Order submitted. The order is pending");
         }
-        return orderRepository.save(saved);
     }
 
     private Order createOrderSuccess(CreateOrderRequest request) {
         Order order = Order.of(
-                request.getLineItems(),
+                request.getItems(),
                 STATUS_COMPLETED
         );
         return orderRepository.save(order);
@@ -41,7 +41,7 @@ public class OrderService {
 
     private Order createPendingOrder(CreateOrderRequest request) {
         Order order = Order.of(
-                request.getLineItems(),
+                request.getItems(),
                 STATUS_PENDING
         );
         return orderRepository.save(order);

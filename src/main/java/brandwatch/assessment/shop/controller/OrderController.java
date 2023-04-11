@@ -1,6 +1,7 @@
 package brandwatch.assessment.shop.controller;
 
 import brandwatch.assessment.shop.dto.CreateOrderRequest;
+import brandwatch.assessment.shop.dto.CreateOrderResult;
 import brandwatch.assessment.shop.model.Order;
 import brandwatch.assessment.shop.service.OrderService;
 import brandwatch.assessment.shop.service.OrderValidationService;
@@ -21,14 +22,10 @@ public class OrderController {
     }
 
     @PostMapping
-    public ResponseEntity<Order> createOrder(@RequestBody CreateOrderRequest createOrderRequest) {
+    public ResponseEntity<CreateOrderResult> createOrder(@RequestBody CreateOrderRequest createOrderRequest) {
         validationService.validateOrderRequest(createOrderRequest);
-        Order savedOrder = orderService.createOrder(createOrderRequest);
-        if (savedOrder.getStatus().equals(OrderService.STATUS_COMPLETED)) {
-            return ResponseEntity.ok(savedOrder);
-        } else {
-            return ResponseEntity.accepted().build();
-        }
+        CreateOrderResult order = orderService.createOrder(createOrderRequest);
+        return ResponseEntity.ok(order);
     }
 
 }

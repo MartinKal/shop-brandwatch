@@ -18,7 +18,7 @@ public class Order {
     @Id
     private ObjectId id;
     @NonNull
-    private List<LineItem> lineItems;
+    private List<Item> items;
     @NonNull
     private String status;
     @Setter(AccessLevel.NONE)
@@ -26,14 +26,14 @@ public class Order {
     @Setter(AccessLevel.NONE)
     private String orderReferenceId;
 
-    private Order(List<LineItem> lineItems, String status) {
-        this.lineItems = lineItems;
+    private Order(List<Item> items, String status) {
+        this.items = items;
         this.status = status;
         createdDate = Instant.now();
         orderReferenceId = UUID.randomUUID().toString();
     }
 
-    public static Order of(List<LineItem> lineItems, String status) {
-        return new Order(lineItems, status);
+    public static Order of(List<Item> items, String status) {
+        return new Order(items, status);
     }
 }

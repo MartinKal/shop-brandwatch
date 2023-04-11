@@ -8,7 +8,7 @@ import lombok.NonNull;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class LineItem {
+public class Item {
     @NonNull
     private String productId;
     @NonNull
