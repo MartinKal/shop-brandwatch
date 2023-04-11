@@ -8,11 +8,11 @@ import org.springframework.stereotype.Service;
 public class OrderValidationService {
 
     public void validateOrderRequest(CreateOrderRequest request) {
-        if (request.getLineItems().size() < 1) {
+        if (request.getItems().size() < 1) {
             throw new IllegalCreateOrderRequest("Orders need to contain at least 1 line item.");
         }
 
-        request.getLineItems().forEach((lineItem -> {
+        request.getItems().forEach(lineItem -> {
             if (lineItem.getProductId().isBlank()) {
                 throw new IllegalCreateOrderRequest("Product name cannot be blank.");
             }
@@ -20,6 +20,6 @@ public class OrderValidationService {
             if (lineItem.getQuantity() < 1) {
                 throw new IllegalCreateOrderRequest("Quantity should be at least 1.");
             }
-        }));
+        });
     }
 }

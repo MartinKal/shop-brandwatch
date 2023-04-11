@@ -1,6 +1,7 @@
 package brandwatch.assessment.shop.controller;
 
 import brandwatch.assessment.shop.exception.IllegalCreateOrderRequest;
+import brandwatch.assessment.shop.exception.OrderCouldNotBeCompleted;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -21,4 +22,8 @@ public class OrderControllerAdvice {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(MISSING_REQUEST_BODY);
     }
 
+    @ExceptionHandler(OrderCouldNotBeCompleted.class)
+    public ResponseEntity<String> handleOrderCouldNotBeCompleted(OrderCouldNotBeCompleted ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
+    }
 }
