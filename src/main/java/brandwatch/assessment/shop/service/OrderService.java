@@ -44,8 +44,8 @@ public class OrderService {
 
     public void retryPendingOrders(Map<String, String> itemsInStock) {
         List<Order> completedOrders = new ArrayList<>();
-        itemsInStock.forEach((productId, quantity) -> {
-            List<Order> pendingOrders = orderRepository.findAllPendingForProductId(productId);
+        for (Map.Entry<String, String> pair: itemsInStock.entrySet()) {
+            List<Order> pendingOrders = orderRepository.findAllPendingForProductId(pair.getKey());
             for (Order pendingOrder: pendingOrders) {
                 StockCheckResult result = storeClient
                         .processStockAvailability(CreateOrderRequest.of(pendingOrder.getItems()));
@@ -54,7 +54,7 @@ public class OrderService {
                     completedOrders.add(pendingOrder);
                 }
             }
-        });
+        }
         orderRepository.saveAll(completedOrders);
     }
 
