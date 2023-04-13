@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class StockCheckResult {
+public class ProcessOrderResult {
     private Boolean success;
-    private String message;
+    private String productReferenceId;
 }
