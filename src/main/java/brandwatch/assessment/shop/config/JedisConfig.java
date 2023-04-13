@@ -1,5 +1,6 @@
 package brandwatch.assessment.shop.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -10,14 +11,19 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.data.redis.stream.StreamMessageListenerContainer;
 
+import java.net.URI;
 import java.time.Duration;
 
 @Configuration
 public class JedisConfig {
 
+    @Value("${spring.redis.url}")
+    private String redisUrl;
+
     @Bean
     public JedisConnectionFactory redisConnectionFactory() {
-        RedisStandaloneConfiguration config = new RedisStandaloneConfiguration("localhost", 6500);
+        URI redisUri = URI.create(redisUrl);
+        RedisStandaloneConfiguration config = new RedisStandaloneConfiguration(redisUri.getHost(), redisUri.getPort());
         return new JedisConnectionFactory(config);
     }
 
