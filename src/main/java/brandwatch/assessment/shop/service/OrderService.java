@@ -3,21 +3,13 @@ package brandwatch.assessment.shop.service;
 import brandwatch.assessment.shop.client.StoreClient;
 import brandwatch.assessment.shop.dto.CreateOrderRequest;
 import brandwatch.assessment.shop.dto.CreateOrderResult;
-import brandwatch.assessment.shop.dto.StockCheckResult;
+import brandwatch.assessment.shop.dto.ProcessOrderRequest;
+import brandwatch.assessment.shop.dto.ProcessOrderResult;
 import brandwatch.assessment.shop.model.Order;
 import brandwatch.assessment.shop.repository.OrderRepository;
-import jakarta.annotation.PostConstruct;
-import org.springframework.context.event.EventListener;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.redis.connection.stream.MapRecord;
-import org.springframework.data.redis.connection.stream.StreamOffset;
-import org.springframework.data.redis.stream.StreamMessageListenerContainer;
-import org.springframework.data.redis.stream.Subscription;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class OrderService {
@@ -34,35 +26,48 @@ public class OrderService {
     }
 
     public CreateOrderResult createOrder(CreateOrderRequest request) {
-        StockCheckResult result = storeClient.processStockAvailability(request);
+        Order order = createPendingOrder(request);
+        ProcessOrderRequest processOrderRequest = new ProcessOrderRequest(order.getOrderReferenceId(), order.getItems());
+        ProcessOrderResult result = storeClient.processStockAvailability(processOrderRequest);
         if (result.getSuccess()) {
-            return new CreateOrderResult(createOrderSuccess(request), "Order completed.");
+            setOrderToCompleted(order);
+            return new CreateOrderResult("Order completed.");
         } else {
-            return new CreateOrderResult(createPendingOrder(request), "Order submitted. The order is pending");
+            return new CreateOrderResult("Order pending.");
         }
     }
 
     public void retryPendingOrders(Map<String, String> itemsInStock) {
         List<Order> completedOrders = new ArrayList<>();
+        Set<String> processedOrders = new HashSet<>();
+
         for (Map.Entry<String, String> pair: itemsInStock.entrySet()) {
             List<Order> pendingOrders = orderRepository.findAllPendingForProductId(pair.getKey());
+
             for (Order pendingOrder: pendingOrders) {
-                StockCheckResult result = storeClient
-                        .processStockAvailability(CreateOrderRequest.of(pendingOrder.getItems()));
-                if (result.getSuccess()) {
-                    pendingOrder.setStatus(STATUS_COMPLETED);
-                    completedOrders.add(pendingOrder);
+                if (!processedOrders.contains(pendingOrder.getOrderReferenceId())) {
+                    processedOrders.add(pendingOrder.getOrderReferenceId());
+
+                    ProcessOrderResult result = storeClient
+                            .processStockAvailability(
+                                    new ProcessOrderRequest(
+                                            pendingOrder.getOrderReferenceId(),
+                                            pendingOrder.getItems()
+                                    )
+                            );
+
+                    if (result.getSuccess()) {
+                        pendingOrder.setStatus(STATUS_COMPLETED);
+                        completedOrders.add(pendingOrder);
+                    }
                 }
             }
         }
         orderRepository.saveAll(completedOrders);
     }
 
-    private Order createOrderSuccess(CreateOrderRequest request) {
-        Order order = Order.of(
-                request.getItems(),
-                STATUS_COMPLETED
-        );
+    private Order setOrderToCompleted(Order order) {
+        order.setStatus(STATUS_COMPLETED);
         return orderRepository.save(order);
     }
 

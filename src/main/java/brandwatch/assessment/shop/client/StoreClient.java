@@ -1,10 +1,9 @@
 package brandwatch.assessment.shop.client;
 
-import brandwatch.assessment.shop.dto.CreateOrderRequest;
-import brandwatch.assessment.shop.dto.StockCheckResult;
+import brandwatch.assessment.shop.dto.ProcessOrderRequest;
+import brandwatch.assessment.shop.dto.ProcessOrderResult;
 import brandwatch.assessment.shop.exception.OrderCouldNotBeCompleted;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -23,19 +22,17 @@ public class StoreClient {
         this.storeBaseUrl = storeBaseUrl;
     }
 
-    public StockCheckResult processStockAvailability(CreateOrderRequest request) {
+    public ProcessOrderResult processStockAvailability(ProcessOrderRequest request) {
         try {
-            ResponseEntity<StockCheckResult> response = restTemplate
+            ResponseEntity<ProcessOrderResult> response = restTemplate
                     .postForEntity(
                             storeBaseUrl + "/products/process",
-                            request, StockCheckResult.class
+                            request, ProcessOrderResult.class
                     );
-            return new StockCheckResult(
+            return new ProcessOrderResult(
                     Objects.requireNonNull(
-                            response.getBody()).getSuccess(), response.getBody().getMessage());
+                            response.getBody()).getSuccess(), response.getBody().getProductReferenceId());
         } catch (HttpClientErrorException ex) {
-            if (ex.getStatusCode() == HttpStatus.CONFLICT)
-                return new StockCheckResult(false, "Order pending.");
             throw new OrderCouldNotBeCompleted(ex.getMessage());
         }
     }
