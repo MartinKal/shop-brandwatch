@@ -13,4 +13,5 @@ import java.util.List;
 public class ProcessOrderRequest {
     private String orderReferenceID;
     List<Item> items;
+    boolean retriedOrder;
 }
