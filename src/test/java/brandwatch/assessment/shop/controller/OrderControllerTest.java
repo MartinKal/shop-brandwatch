@@ -35,28 +35,31 @@ public class OrderControllerTest {
     private OrderController orderController;
 
     private MockMvc mockMvc;
+    private ObjectMapper objectMapper;
 
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.openMocks(this);
         orderController = new OrderController(orderService, validationService, null);
         mockMvc = MockMvcBuilders.standaloneSetup(orderController).build();
+        objectMapper = new ObjectMapper();
     }
 
     @Test
     public void testCreateOrder() throws Exception {
+        // Given
         List<Item> items = List.of(
-                new Item("item1", 5),
-                new Item("item2", 3)
+                new Item("apple", 5),
+                new Item("banana", 3)
         );
         CreateOrderRequest request = new CreateOrderRequest(items);
         CreateOrderResult expectedResult = new CreateOrderResult("Order completed.");
 
         when(orderService.createOrder(request)).thenReturn(expectedResult);
 
-        ObjectMapper objectMapper = new ObjectMapper();
         String requestJson = objectMapper.writeValueAsString(request);
 
+        // When-Then
         mockMvc.perform(post("/orders")
                         .contentType("application/json")
                         .content(requestJson))

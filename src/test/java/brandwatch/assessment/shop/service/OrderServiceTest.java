@@ -42,6 +42,7 @@ public class OrderServiceTest {
 
     @Test
     public void testCreateOrderSuccess() {
+        // Given
         CreateOrderRequest orderRequest = new CreateOrderRequest(List.of(
                 new Item("apple", 3),
                 new Item("banana", 5)
@@ -52,8 +53,10 @@ public class OrderServiceTest {
         ProcessOrderResult processOrderResult = new ProcessOrderResult(true, UUID.randomUUID().toString());
         when(storeClient.processStockAvailability(any(ProcessOrderRequest.class))).thenReturn(processOrderResult);
 
+        // When
         CreateOrderResult orderResult = orderService.createOrder(orderRequest);
 
+        // Then
         verify(repository, times(2)).save(any(Order.class));
         verify(storeClient).processStockAvailability(any(ProcessOrderRequest.class));
         assertEquals(orderResult.getMessage(), "Order completed.");
@@ -62,6 +65,7 @@ public class OrderServiceTest {
 
     @Test
     public void testCreateOrderPending() {
+        // Given
         CreateOrderRequest orderRequest = new CreateOrderRequest(List.of(
                 new Item("apple", 3),
                 new Item("banana", 5)
@@ -72,8 +76,10 @@ public class OrderServiceTest {
         ProcessOrderResult processOrderResult = new ProcessOrderResult(false, UUID.randomUUID().toString());
         when(storeClient.processStockAvailability(any(ProcessOrderRequest.class))).thenReturn(processOrderResult);
 
+        // When
         CreateOrderResult orderResult = orderService.createOrder(orderRequest);
 
+        // Then
         verify(repository).save(any(Order.class));
         verify(storeClient).processStockAvailability(any(ProcessOrderRequest.class));
         assertEquals(orderResult.getMessage(), "Order pending.");
@@ -82,20 +88,20 @@ public class OrderServiceTest {
 
     @Test
     void testRetryPendingOrders() {
-        // Arrange
-        Map<String, String> itemsInStock = Map.of("item", "10");
-        Order pendingOrder1 = Order.of(List.of(new Item("item", 5)), OrderService.STATUS_PENDING);
-        Order pendingOrder2 = Order.of(List.of(new Item("item", 3)), OrderService.STATUS_PENDING);
+        // Given
+        Map<String, String> itemsInStock = Map.of("apple", "10");
+        Order pendingOrder1 = Order.of(List.of(new Item("apple", 5)), OrderService.STATUS_PENDING);
+        Order pendingOrder2 = Order.of(List.of(new Item("apple", 3)), OrderService.STATUS_PENDING);
         List<Order> pendingOrders = List.of(pendingOrder1, pendingOrder2);
-        when(repository.findAllPendingForProductId("item")).thenReturn(pendingOrders);
+        when(repository.findAllPendingForProductId("apple")).thenReturn(pendingOrders);
 
         when(storeClient.processStockAvailability(any(ProcessOrderRequest.class)))
                 .thenReturn(new ProcessOrderResult(true, "ref1"));
 
-        // Act
+        // When
         orderService.retryPendingOrders(itemsInStock);
 
-        // Assert
+        // Then
         verify(storeClient, times(2)).processStockAvailability(any(ProcessOrderRequest.class));
         verify(repository).saveAll(pendingOrders);
     }
