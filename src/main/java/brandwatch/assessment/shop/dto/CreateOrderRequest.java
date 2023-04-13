@@ -9,7 +9,7 @@ import lombok.NonNull;
 import java.util.List;
 
 @Data
-@AllArgsConstructor(staticName = "of")
+@AllArgsConstructor
 @NoArgsConstructor
 public class CreateOrderRequest {
     @NonNull
