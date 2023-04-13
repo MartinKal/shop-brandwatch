@@ -1,5 +1,5 @@
 # shop-brandwatch
-Shop component
+## Shop component
 
 
 ### For instructions look at:
