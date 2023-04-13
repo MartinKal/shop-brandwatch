@@ -27,7 +27,11 @@ public class OrderService {
 
     public CreateOrderResult createOrder(CreateOrderRequest request) {
         Order order = createPendingOrder(request);
-        ProcessOrderRequest processOrderRequest = new ProcessOrderRequest(order.getOrderReferenceId(), order.getItems());
+        ProcessOrderRequest processOrderRequest = new ProcessOrderRequest(
+                order.getOrderReferenceId(),
+                order.getItems(),
+                false
+        );
         ProcessOrderResult result = storeClient.processStockAvailability(processOrderRequest);
         if (result.getSuccess()) {
             setOrderToCompleted(order);
@@ -52,7 +56,8 @@ public class OrderService {
                             .processStockAvailability(
                                     new ProcessOrderRequest(
                                             pendingOrder.getOrderReferenceId(),
-                                            pendingOrder.getItems()
+                                            pendingOrder.getItems(),
+                                            true
                                     )
                             );
 
