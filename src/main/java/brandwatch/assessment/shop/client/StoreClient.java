@@ -16,17 +16,21 @@ public class StoreClient {
 
     private final RestTemplate restTemplate;
     private final String storeBaseUrl;
+    private final String processOrderUrl;
 
-    public StoreClient(@Value("${store.base-url}") String storeBaseUrl) {
+    public StoreClient(
+            @Value("${store.base-url}") String storeBaseUrl,
+            @Value("${store.process-order-url}") String processOrderUrl) {
         this.restTemplate = new RestTemplate();
         this.storeBaseUrl = storeBaseUrl;
+        this.processOrderUrl = processOrderUrl;
     }
 
     public ProcessOrderResult processStockAvailability(ProcessOrderRequest request) {
         try {
             ResponseEntity<ProcessOrderResult> response = restTemplate
                     .postForEntity(
-                            storeBaseUrl + "/products/process",
+                            storeBaseUrl + processOrderUrl,
                             request, ProcessOrderResult.class
                     );
             return new ProcessOrderResult(
