@@ -30,8 +30,8 @@ public class OrderService {
                 order.getItems(),
                 false
         );
-        ProcessOrderResult result = storeClient.processStockAvailability(processOrderRequest);
-        if (result.getSuccess()) {
+        ProcessedOrder result = storeClient.processStockAvailability(processOrderRequest);
+        if (result.isCompleted()) {
             setOrderToCompleted(order);
             return new CreateOrderResult("Order completed.");
         } else {
@@ -39,7 +39,7 @@ public class OrderService {
         }
     }
 
-    public void retryPendingOrders2(Map<String, String> itemsInStock) {
+    public void retryPendingOrders(Map<String, String> itemsInStock) {
         Set<Order> ordersToBeProcessed = orderRepository.findAllPending()
                 .stream()
                 .filter(order -> order
@@ -49,15 +49,15 @@ public class OrderService {
                 )
                 .collect(Collectors.toSet());
 
-        ProcessOrderRequest2 request2 =
-                new ProcessOrderRequest2(
+        ProcessRetriedOrdersRequest request =
+                new ProcessRetriedOrdersRequest(
                         ordersToBeProcessed
                                 .stream()
                                 .map(order -> new OrderData(order.getItems(), order.getOrderReferenceId()))
                                 .collect(Collectors.toSet())
                 );
 
-        Set<String> completedOrders = storeClient.processStockAvailability2(request2)
+        Set<String> completedOrders = storeClient.processRetriedStockAvailability(request)
                 .getProcessedOrders()
                 .stream()
                 .filter(ProcessedOrder::isCompleted)
@@ -75,38 +75,7 @@ public class OrderService {
                 order.setStatus(STATUS_COMPLETED);
             }
         }
-
         orderRepository.saveAll(ordersToBeProcessed);
-    }
-
-    public void retryPendingOrders(Map<String, String> itemsInStock) {
-        List<Order> completedOrders = new ArrayList<>();
-        Set<String> processedOrders = new HashSet<>();
-
-        for (Map.Entry<String, String> pair : itemsInStock.entrySet()) {
-            Set<Order> pendingOrders = orderRepository.findAllPendingForProductId(pair.getKey());
-
-            for (Order pendingOrder : pendingOrders) {
-                if (!processedOrders.contains(pendingOrder.getOrderReferenceId())) {
-                    processedOrders.add(pendingOrder.getOrderReferenceId());
-
-                    ProcessOrderResult result = storeClient
-                            .processStockAvailability(
-                                    new ProcessOrderRequest(
-                                            pendingOrder.getOrderReferenceId(),
-                                            pendingOrder.getItems(),
-                                            true
-                                    )
-                            );
-
-                    if (result.getSuccess()) {
-                        pendingOrder.setStatus(STATUS_COMPLETED);
-                        completedOrders.add(pendingOrder);
-                    }
-                }
-            }
-        }
-        orderRepository.saveAll(completedOrders);
     }
 
     private Order setOrderToCompleted(Order order) {

@@ -9,6 +9,6 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ProcessOrderResult2 {
+public class ProcessRetriedOrdersResult {
     List<ProcessedOrder> processedOrders;
 }

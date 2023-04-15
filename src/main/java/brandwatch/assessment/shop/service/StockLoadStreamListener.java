@@ -22,7 +22,7 @@ public class StockLoadStreamListener implements StreamListener<String, MapRecord
 
     @Override
     public void onMessage(MapRecord<String, String, String> message) {
-        orderService.retryPendingOrders2(message.getValue());
+        orderService.retryPendingOrders(message.getValue());
     }
 
     @PostConstruct

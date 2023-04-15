@@ -1,10 +1,7 @@
 package brandwatch.assessment.shop.service;
 
 import brandwatch.assessment.shop.client.StoreClient;
-import brandwatch.assessment.shop.dto.CreateOrderRequest;
-import brandwatch.assessment.shop.dto.CreateOrderResult;
-import brandwatch.assessment.shop.dto.ProcessOrderRequest;
-import brandwatch.assessment.shop.dto.ProcessOrderResult;
+import brandwatch.assessment.shop.dto.*;
 import brandwatch.assessment.shop.model.Item;
 import brandwatch.assessment.shop.model.Order;
 import brandwatch.assessment.shop.repository.OrderRepository;
@@ -51,7 +48,7 @@ public class OrderServiceTest {
         Order pendingOrder = Order.of(orderRequest.getItems(), OrderService.STATUS_PENDING);
         when(repository.save(any(Order.class))).thenReturn(pendingOrder);
 
-        ProcessOrderResult processOrderResult = new ProcessOrderResult(true, UUID.randomUUID().toString());
+        ProcessedOrder processOrderResult = new ProcessedOrder(UUID.randomUUID().toString(), true);
         when(storeClient.processStockAvailability(any(ProcessOrderRequest.class))).thenReturn(processOrderResult);
 
         // When
@@ -74,7 +71,7 @@ public class OrderServiceTest {
         Order pendingOrder = Order.of(orderRequest.getItems(), OrderService.STATUS_PENDING);
         when(repository.save(any(Order.class))).thenReturn(pendingOrder);
 
-        ProcessOrderResult processOrderResult = new ProcessOrderResult(false, UUID.randomUUID().toString());
+        ProcessedOrder processOrderResult = new ProcessedOrder(UUID.randomUUID().toString(), false);
         when(storeClient.processStockAvailability(any(ProcessOrderRequest.class))).thenReturn(processOrderResult);
 
         // When
@@ -91,19 +88,23 @@ public class OrderServiceTest {
     void testRetryPendingOrders() {
         // Given
         Map<String, String> itemsInStock = Map.of("apple", "10");
+        ProcessedOrder order1 = new ProcessedOrder("ref1", true);
+        ProcessedOrder order2 = new ProcessedOrder("ref2", true);
         Order pendingOrder1 = Order.of(List.of(new Item("apple", 5)), OrderService.STATUS_PENDING);
-        Order pendingOrder2 = Order.of(List.of(new Item("apple", 3)), OrderService.STATUS_PENDING);
+        Order pendingOrder2 = Order.of(List.of(new Item("apple", 3)), OrderService.STATUS_COMPLETED);
         Set<Order> pendingOrders = Set.of(pendingOrder1, pendingOrder2);
-        when(repository.findAllPendingForProductId("apple")).thenReturn(pendingOrders);
 
-        when(storeClient.processStockAvailability(any(ProcessOrderRequest.class)))
-                .thenReturn(new ProcessOrderResult(true, "ref1"));
+        when(storeClient.processRetriedStockAvailability(any(ProcessRetriedOrdersRequest.class)))
+                .thenReturn(new ProcessRetriedOrdersResult(List.of(order1, order2)));
 
+        when(repository.findAllPending()).thenReturn(pendingOrders);
         // When
         orderService.retryPendingOrders(itemsInStock);
 
         // Then
-        verify(storeClient, times(2)).processStockAvailability(any(ProcessOrderRequest.class));
-        verify(repository).saveAll(pendingOrders);
+        verify(storeClient, times(1))
+                .processRetriedStockAvailability(any(ProcessRetriedOrdersRequest.class));
+        verify(repository).findAllPending();
+        verify(repository).saveAll(any(Set.class));
     }
 }
