@@ -10,7 +10,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProcessOrderRequest {
+public class ProcessOrderData {
     private String orderReferenceId;
     List<Item> items;
     boolean retriedOrder;

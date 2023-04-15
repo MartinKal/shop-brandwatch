@@ -18,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -92,7 +93,7 @@ public class OrderServiceTest {
         Map<String, String> itemsInStock = Map.of("apple", "10");
         Order pendingOrder1 = Order.of(List.of(new Item("apple", 5)), OrderService.STATUS_PENDING);
         Order pendingOrder2 = Order.of(List.of(new Item("apple", 3)), OrderService.STATUS_PENDING);
-        List<Order> pendingOrders = List.of(pendingOrder1, pendingOrder2);
+        Set<Order> pendingOrders = Set.of(pendingOrder1, pendingOrder2);
         when(repository.findAllPendingForProductId("apple")).thenReturn(pendingOrders);
 
         when(storeClient.processStockAvailability(any(ProcessOrderRequest.class)))
