@@ -1,17 +1,14 @@
 package brandwatch.assessment.shop.dto;
 
 import brandwatch.assessment.shop.model.Item;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.List;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProcessOrderRequest {
+public class OrderData {
+    private List<Item> items;
     private String orderReferenceId;
-    List<Item> items;
-    boolean retriedOrder;
 }

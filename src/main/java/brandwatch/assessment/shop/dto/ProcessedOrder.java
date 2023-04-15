@@ -5,9 +5,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
-public class ProcessOrderResult {
-    private Boolean success;
-    private String productReferenceId;
+@AllArgsConstructor
+public class ProcessedOrder {
+    private String orderReferenceId;
+    private boolean completed;
 }
