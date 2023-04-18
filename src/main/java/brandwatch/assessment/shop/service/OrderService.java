@@ -70,11 +70,10 @@ public class OrderService {
                 .filter(completedOrders::contains)
                 .collect(Collectors.toSet());
 
-        for (Order order : ordersToBeProcessed) {
-            if (ordersForChange.contains(order.getOrderReferenceId())) {
-                order.setStatus(STATUS_COMPLETED);
-            }
-        }
+        ordersToBeProcessed
+                .stream()
+                .filter(order -> ordersForChange.contains(order.getOrderReferenceId()))
+                .forEach(order -> order.setStatus(STATUS_COMPLETED));
         orderRepository.saveAll(ordersToBeProcessed);
     }
 
