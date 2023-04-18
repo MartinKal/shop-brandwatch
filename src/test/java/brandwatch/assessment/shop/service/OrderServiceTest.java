@@ -105,6 +105,6 @@ public class OrderServiceTest {
         verify(storeClient, times(1))
                 .processRetriedStockAvailability(any(ProcessRetriedOrdersRequest.class));
         verify(repository).findAllPending();
-        verify(repository).saveAll(any(Set.class));
+        verify(repository).saveAll(notNull());
     }
 }
